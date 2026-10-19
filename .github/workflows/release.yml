@@ -1,0 +1,38 @@
+# 推送新的 e.apk 与 version.json 后，自动创建对应版本的 Release。
+# releases/latest/download/e.apk 始终指向最新版本，网站与应用内更新提示都使用这个固定地址。
+name: release
+on:
+  push:
+    branches: [main]
+    paths: [e.apk, version.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 校验安装包与版本信息
+        run: |
+          set -euo pipefail
+          version=$(jq -r .versionName version.json)
+          expected=$(jq -r .sha256 version.json)
+          actual=$(sha256sum e.apk | cut -d' ' -f1)
+          test "$expected" = "$actual" || { echo "e.apk 的 SHA-256 与 version.json 不一致"; exit 1; }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: 发布 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="v$VERSION"
+          cp e.apk "e-$VERSION.apk"
+          notes=$(jq -r '.notes // "e 安卓客户端"' version.json)
+          notes="$notes"$'\n\n'"SHA-256：\`$(jq -r .sha256 version.json)\`"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" e.apk "e-$VERSION.apk" --clobber
+            gh release edit "$tag" --notes "$notes" --latest
+          else
+            gh release create "$tag" e.apk "e-$VERSION.apk" --title "e $VERSION" --notes "$notes" --latest
+          fi
