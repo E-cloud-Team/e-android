@@ -5,7 +5,7 @@
 ## 下载
 
 - 最新版（GitHub）：<https://github.com/E-cloud-Team/e-android/releases/latest/download/e.apk>
-- 国内镜像：<https://harnesshub.me/assets/app/e.apk>
+- 国内镜像：<https://yeraldo.com/assets/app/e.apk>
 - 历史版本：[Releases](https://github.com/E-cloud-Team/e-android/releases)
 
 要求 Android 7.0 及以上。首次安装时，系统会提示允许浏览器“安装未知应用”。
